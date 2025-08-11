@@ -16,6 +16,7 @@
     "typecheck": "tsc -b --pretty false",
     "tauri": "tauri",
     "tauri:build": "tauri build",
+    "release:tag": "git tag -a %TAG% -m \"Release %TAG%\" && git push origin %TAG%",
     "check:rust:fmt": "cargo fmt --manifest-path src-tauri/Cargo.toml --all -- --check",
     "check:rust:clippy": "cargo clippy --manifest-path src-tauri/Cargo.toml --all-targets -- -D warnings",
     "check:rust:check": "cargo check --manifest-path src-tauri/Cargo.toml --all-targets --all-features",
