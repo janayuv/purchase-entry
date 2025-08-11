@@ -1,0 +1,18 @@
+# Ignore dependencies and build outputs
+node_modules/
+dist/
+coverage/
+
+# Tauri / Rust targets and build cache
+src-tauri/target/
+src-tauri/.cargo/
+src-tauri/.tauri/
+src-tauri/gen/
+
+# Vite cache
+.vite/
+
+# Logs and OS files
+*.log
+.DS_Store
+Thumbs.db

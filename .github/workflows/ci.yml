@@ -1,0 +1,65 @@
+name: CI
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: Install JS dependencies
+        run: npm ci
+        working-directory: ./
+
+      - name: ESLint
+        run: npm run lint
+
+      - name: Prettier check
+        run: npm run format:check
+
+      - name: TypeScript typecheck
+        run: npm run typecheck
+
+      - name: Unit tests (Vitest)
+        run: npm run coverage
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Install Rust components (clippy, rustfmt)
+        run: |
+          rustup component add clippy
+          rustup component add rustfmt
+
+      - name: Cache Cargo registry
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+
+      - name: Rustfmt check
+        run: cargo fmt --all -- --check
+        working-directory: ./src-tauri
+
+      - name: Clippy (deny warnings)
+        run: cargo clippy --all-targets -- -D warnings
+        working-directory: ./src-tauri
+
+      - name: Cargo check
+        run: cargo check --all-targets --all-features
+        working-directory: ./src-tauri
