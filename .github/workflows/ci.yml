@@ -195,6 +195,10 @@ jobs:
         if: matrix.os == 'windows-latest'
         run: choco install nsis -y
 
+      - name: Setup MSVC for Tauri Build (Windows)
+        if: matrix.os == 'windows-latest'
+        uses: microsoft/setup-msvc-dev@v1
+
       - name: Tauri Build and Release
         uses: tauri-apps/tauri-action@v0
         env:
