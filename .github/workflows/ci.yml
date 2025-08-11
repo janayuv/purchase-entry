@@ -9,6 +9,9 @@ on:
     branches: [main, master]
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
   build-and-test:
     name: Checks (${{ matrix.os }})
@@ -99,7 +102,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, macos-latest, windows-latest]
+        os: [ubuntu-latest, macos-latest]
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -140,18 +143,62 @@ jobs:
       #   if: matrix.os == 'windows-latest'
       #   run: choco install nsis -y
 
-      # Build Tauri app installers
-      # Option A: via npm script (ensure package.json has "tauri" script)
-      # - name: Tauri build (npm)
-      #   run: npm run tauri build
+      # Build Tauri app installers via npm
+      - name: Tauri build (npm)
+        run: npm run tauri:build
 
-      # Option B: via official tauri-action (recommended for releases)
-      # - name: Tauri Build
-      #   uses: tauri-apps/tauri-action@v0
-      #   with:
-      #     tagName: v__VERSION__
-      #     releaseName: 'Tauri v__VERSION__'
-      #     releaseBody: 'See the assets to download this version and install.'
-      #     includeDebug: false
-      #   env:
-      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  # Release installers on tags using official tauri-action
+  release-installers:
+    name: Release Installers (${{ matrix.os }})
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install JS dependencies
+        run: npm ci
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Install Ubuntu dependencies for Tauri bundling
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libglib2.0-dev \
+            libwebkit2gtk-4.1-dev \
+            build-essential \
+            curl \
+            wget \
+            file \
+            libxdo-dev \
+            libgtk-3-dev \
+            libayatana-appindicator3-dev \
+            librsvg2-dev \
+            pkg-config \
+            patchelf
+
+      - name: Install NSIS (Windows)
+        if: matrix.os == 'windows-latest'
+        run: choco install nsis -y
+
+      - name: Tauri Build and Release
+        uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          includeDebug: false
+          releaseDraft: true
