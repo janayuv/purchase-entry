@@ -2,6 +2,7 @@
 node_modules/
 dist/
 coverage/
+**/coverage/
 
 # Tauri / Rust targets and build cache
 src-tauri/target/
@@ -11,6 +12,9 @@ src-tauri/gen/
 
 # Vite cache
 .vite/
+
+# Nested repo copies (accidental)
+tauri-template/
 
 # Logs and OS files
 *.log

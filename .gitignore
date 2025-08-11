@@ -22,3 +22,10 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Build/test artifacts
+coverage/
+**/coverage/
+
+# Accidental nested copy of repo root
+tauri-template/
