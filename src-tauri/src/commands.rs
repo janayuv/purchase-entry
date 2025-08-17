@@ -8,6 +8,8 @@ use crate::models::{
     PurchaseEntry, PurchaseCreate, PurchaseUpdate, PurchaseFilters, PurchaseItem, PurchaseItemPayload,
     User, UserCreate, LoginPayload, LoginResponse, ReportSummary, PurchasesBySupplier,
 };
+use calamine::{Reader, Xlsx, open_workbook};
+use rust_xlsxwriter::{Workbook, Worksheet};
 
 #[tauri::command]
 pub async fn get_suppliers(
@@ -572,5 +574,48 @@ pub async fn delete_supplier(db: State<'_, Db>, id: i64) -> Result<bool, String>
         .await
         .map_err(|e| e.to_string())?;
     Ok(res.rows_affected() > 0)
+}
+
+#[tauri::command]
+pub async fn import_suppliers_from_excel(db: State<'_, Db>, path: String) -> Result<usize, String> {
+    let mut workbook: Xlsx<_> = open_workbook(path).map_err(|e| e.to_string())?;
+    let sheet = workbook.worksheet_range("Sheet1").ok_or_else(|| "Sheet1 not found".to_string())??;
+
+    let mut count = 0;
+    for row in sheet.rows().skip(1) {
+        let name = row.get(0).and_then(|c| c.get_string()).unwrap_or_default().to_string();
+        if name.is_empty() {
+            continue;
+        }
+
+        let supplier = SupplierCreate {
+            name,
+            gst_no: row.get(1).and_then(|c| c.get_string()).map(|s| s.to_string()),
+            state_code: row.get(2).and_then(|c| c.get_string()).map(|s| s.to_string()),
+            tds_flag: row.get(3).and_then(|c| c.get_bool()).unwrap_or(false),
+            tds_rate: row.get(4).and_then(|c| c.get_f64()),
+            contact: row.get(5).and_then(|c| c.get_string()).map(|s| s.to_string()),
+            email: row.get(6).and_then(|c| c.get_string()).map(|s| s.to_string()),
+        };
+
+        add_supplier(db.clone(), supplier).await?;
+        count += 1;
+    }
+
+    Ok(count)
+}
+
+#[tauri::command]
+pub async fn generate_supplier_template(path: String) -> Result<(), String> {
+    let mut workbook = Workbook::new();
+    let worksheet = workbook.add_worksheet();
+
+    let headers = ["Name", "GST No", "State Code", "TDS Flag", "TDS Rate", "Contact", "Email"];
+    for (i, header) in headers.iter().enumerate() {
+        worksheet.write_string(0, i as u16, header).map_err(|e| e.to_string())?;
+    }
+
+    workbook.save(&path).map_err(|e| e.to_string())?;
+    Ok(())
 }
 

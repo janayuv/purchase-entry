@@ -5,12 +5,17 @@ import {
   useDeleteSupplier,
   useSuppliers,
   useUpdateSupplier,
+  useImportSuppliers,
 } from "../lib/queries";
 import type { Supplier, SupplierCreate, SupplierUpdate } from "../lib/types";
+import { invoke } from "@tauri-apps/api/core";
+import { open } from "@tauri-apps/plugin-dialog";
+import { downloadDir } from "@tauri-apps/api/path";
 
 export function SuppliersPage() {
   const navigate = useNavigate();
   const { data: suppliersPage, isLoading, isError, refetch } = useSuppliers();
+  const importMutation = useImportSuppliers();
   const addMutation = useAddSupplier();
   const updateMutation = useUpdateSupplier();
   const deleteMutation = useDeleteSupplier();
@@ -118,6 +123,35 @@ export function SuppliersPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h2 className="text-xl font-semibold">Suppliers</h2>
+        <div className="flex gap-2">
+          <button
+            className="rounded border px-3 py-1.5 text-sm"
+            onClick={async () => {
+              const desktop = await downloadDir();
+              const filePath = `${desktop}/supplier_template.xlsx`;
+              await invoke("generate_supplier_template", { path: filePath });
+              alert(`Template saved to ${filePath}`);
+            }}
+          >
+            Download Template
+          </button>
+          <button
+            className="bg-primary text-primary-foreground rounded px-3 py-1.5 text-sm"
+            onClick={async () => {
+              const file = await open({
+                multiple: false,
+                filters: [{ name: "Excel", extensions: ["xlsx"] }],
+              });
+              if (file) {
+                const count = await importMutation.mutateAsync(file);
+                alert(`Successfully imported ${count} suppliers.`);
+                refetch();
+              }
+            }}
+          >
+            Import from Excel
+          </button>
+        </div>
       </div>
 
       <div className="grid gap-6 md:grid-cols-[1fr_420px]">

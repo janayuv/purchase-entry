@@ -54,6 +54,16 @@ export function useDeleteSupplier() {
   });
 }
 
+export function useImportSuppliers() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (path: string): Promise<number> => {
+      return await invoke("import_suppliers_from_excel", { path });
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["suppliers"] }),
+  });
+}
+
 export function usePurchases(
   filters: Partial<PurchaseFilters>,
   page = 1,

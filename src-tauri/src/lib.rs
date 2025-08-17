@@ -79,6 +79,8 @@ pub fn run() {
             crate::commands::add_supplier,
             crate::commands::update_supplier,
             crate::commands::delete_supplier,
+            crate::commands::import_suppliers_from_excel,
+            crate::commands::generate_supplier_template,
             // Purchases & Items
             crate::commands::get_purchases,
             crate::commands::add_purchase,
