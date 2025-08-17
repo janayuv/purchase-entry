@@ -1,6 +1,11 @@
 import { useMemo, useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { usePurchases, useItemsByPurchase, useSuppliers, useDeletePurchase } from "../lib/queries";
+import {
+  usePurchases,
+  useItemsByPurchase,
+  useSuppliers,
+  useDeletePurchase,
+} from "../lib/queries";
 import type { PurchaseFilters, Supplier, PurchaseEntry } from "../lib/types";
 import { PurchaseForm } from "../components/purchases/PurchaseForm";
 
@@ -13,7 +18,10 @@ export function PurchaseFormPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const items = useItemsByPurchase(selectedId ?? 0);
   const { data: suppliersPage } = useSuppliers();
-  const suppliers: Supplier[] = useMemo(() => suppliersPage?.data || [], [suppliersPage]);
+  const suppliers: Supplier[] = useMemo(
+    () => suppliersPage?.data || [],
+    [suppliersPage],
+  );
   const deletePurchase = useDeletePurchase();
 
   const handleCreated = () => {
@@ -24,8 +32,8 @@ export function PurchaseFormPage() {
   const handleUpdated = () => {
     setEditing(null);
     // clear ?edit param if present
-    if (searchParams.get('edit')) {
-      searchParams.delete('edit');
+    if (searchParams.get("edit")) {
+      searchParams.delete("edit");
       setSearchParams(searchParams, { replace: true });
     }
     refetch();
@@ -33,7 +41,7 @@ export function PurchaseFormPage() {
 
   // If navigated with ?edit=<id>, pick from current list when available
   useEffect(() => {
-    const idStr = searchParams.get('edit');
+    const idStr = searchParams.get("edit");
     if (!idStr) return;
     const id = Number(idStr);
     const entry = data?.data.find((p) => p.id === id) || null;
@@ -48,14 +56,16 @@ export function PurchaseFormPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold text-slate-800 dark:text-slate-200">Purchase Entry</h2>
-          <p className="text-sm text-slate-600 dark:text-slate-400 mt-1">
+          <h2 className="text-2xl font-bold text-slate-800 dark:text-slate-200">
+            Purchase Entry
+          </h2>
+          <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
             Enter purchases and view recent entries in real-time
           </p>
         </div>
         <button
           onClick={handleCancel}
-          className="px-4 py-2 text-sm border border-slate-300 dark:border-slate-600 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
+          className="rounded-lg border border-slate-300 px-4 py-2 text-sm transition-colors hover:bg-slate-50 dark:border-slate-600 dark:hover:bg-slate-800"
         >
           ← Back to Full List
         </button>
@@ -63,121 +73,189 @@ export function PurchaseFormPage() {
 
       {/* Purchase Form - Full Width */}
       <div className="space-y-6">
-        <div className="bg-white dark:bg-slate-900 rounded-lg border shadow-sm">
-          <div className="p-4 border-b border-slate-200 dark:border-slate-700">
-            <h3 className="font-semibold text-slate-800 dark:text-slate-200">Quick Entry Form</h3>
-            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+        <div className="rounded-lg border bg-white shadow-sm dark:bg-slate-900">
+          <div className="border-b border-slate-200 p-4 dark:border-slate-700">
+            <h3 className="font-semibold text-slate-800 dark:text-slate-200">
+              Quick Entry Form
+            </h3>
+            <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
               Form stays open for continuous entry
             </p>
           </div>
           <div className="p-4">
-            <PurchaseForm onCreated={handleCreated} onUpdated={handleUpdated} initial={editing} />
+            <PurchaseForm
+              onCreated={handleCreated}
+              onUpdated={handleUpdated}
+              initial={editing}
+            />
           </div>
         </div>
 
         {/* Recent Purchases List - Moved Down */}
         <div className="space-y-4">
-          <div className="bg-white dark:bg-slate-900 rounded-lg border shadow-sm">
-            <div className="p-4 border-b border-slate-200 dark:border-slate-700">
-              <h3 className="font-semibold text-slate-800 dark:text-slate-200">Recent Entries</h3>
-              <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-                Latest 10 purchases with all details - updates automatically after each entry
+          <div className="rounded-lg border bg-white shadow-sm dark:bg-slate-900">
+            <div className="border-b border-slate-200 p-4 dark:border-slate-700">
+              <h3 className="font-semibold text-slate-800 dark:text-slate-200">
+                Recent Entries
+              </h3>
+              <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+                Latest 10 purchases with all details - updates automatically
+                after each entry
               </p>
             </div>
             <div className="overflow-x-auto">
               {isLoading ? (
-                <div className="p-6 text-center text-slate-500">Loading recent purchases...</div>
+                <div className="p-6 text-center text-slate-500">
+                  Loading recent purchases...
+                </div>
               ) : isError ? (
-                <div className="p-6 text-center text-red-500">Failed to load purchases</div>
+                <div className="p-6 text-center text-red-500">
+                  Failed to load purchases
+                </div>
               ) : (
                 <table className="min-w-full text-sm">
-                  <thead className="bg-slate-50 dark:bg-slate-800 text-left">
+                  <thead className="bg-slate-50 text-left dark:bg-slate-800">
                     <tr>
-                      <th className="p-2 font-semibold text-slate-700 dark:text-slate-300">Entry Date</th>
-                      <th className="p-2 font-semibold text-slate-700 dark:text-slate-300">Supplier</th>
-                      <th className="p-2 font-semibold text-slate-700 dark:text-slate-300">Invoice</th>
-                      <th className="p-2 font-semibold text-slate-700 dark:text-slate-300">Date</th>
-                      <th className="p-2 font-semibold text-slate-700 dark:text-slate-300 text-right">Basic</th>
-                      <th className="p-2 font-semibold text-slate-700 dark:text-slate-300 text-center">GST%</th>
-                      <th className="p-2 font-semibold text-slate-700 dark:text-slate-300 text-right">SGST</th>
-                      <th className="p-2 font-semibold text-slate-700 dark:text-slate-300 text-right">CGST</th>
-                      <th className="p-2 font-semibold text-slate-700 dark:text-slate-300 text-right">IGST</th>
-                      <th className="p-2 font-semibold text-slate-700 dark:text-slate-300 text-right">TDS</th>
-                      <th className="p-2 font-semibold text-slate-700 dark:text-slate-300 text-right">Total</th>
-                      <th className="p-2 font-semibold text-slate-700 dark:text-slate-300">Status</th>
-                      <th className="p-2 font-semibold text-slate-700 dark:text-slate-300 text-right">Actions</th>
+                      <th className="p-2 font-semibold text-slate-700 dark:text-slate-300">
+                        Entry Date
+                      </th>
+                      <th className="p-2 font-semibold text-slate-700 dark:text-slate-300">
+                        Supplier
+                      </th>
+                      <th className="p-2 font-semibold text-slate-700 dark:text-slate-300">
+                        Invoice
+                      </th>
+                      <th className="p-2 font-semibold text-slate-700 dark:text-slate-300">
+                        Date
+                      </th>
+                      <th className="p-2 text-right font-semibold text-slate-700 dark:text-slate-300">
+                        Basic
+                      </th>
+                      <th className="p-2 text-center font-semibold text-slate-700 dark:text-slate-300">
+                        GST%
+                      </th>
+                      <th className="p-2 text-right font-semibold text-slate-700 dark:text-slate-300">
+                        SGST
+                      </th>
+                      <th className="p-2 text-right font-semibold text-slate-700 dark:text-slate-300">
+                        CGST
+                      </th>
+                      <th className="p-2 text-right font-semibold text-slate-700 dark:text-slate-300">
+                        IGST
+                      </th>
+                      <th className="p-2 text-right font-semibold text-slate-700 dark:text-slate-300">
+                        TDS
+                      </th>
+                      <th className="p-2 text-right font-semibold text-slate-700 dark:text-slate-300">
+                        Total
+                      </th>
+                      <th className="p-2 font-semibold text-slate-700 dark:text-slate-300">
+                        Status
+                      </th>
+                      <th className="p-2 text-right font-semibold text-slate-700 dark:text-slate-300">
+                        Actions
+                      </th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-200 dark:divide-slate-700">
                     {(data?.data || []).map((p) => {
-                      const supplier = suppliers.find(s => s.id === p.supplier_id);
+                      const supplier = suppliers.find(
+                        (s) => s.id === p.supplier_id,
+                      );
                       return (
-                        <tr 
-                          key={p.id} 
-                          className={`hover:bg-slate-50 dark:hover:bg-slate-800 cursor-pointer transition-colors ${
-                            selectedId === p.id ? "bg-blue-50 dark:bg-blue-900/20 border-l-4 border-blue-500" : ""
-                          }`} 
-                          onClick={() => setSelectedId(selectedId === p.id ? null : p.id)}
+                        <tr
+                          key={p.id}
+                          className={`cursor-pointer transition-colors hover:bg-slate-50 dark:hover:bg-slate-800 ${
+                            selectedId === p.id
+                              ? "border-l-4 border-blue-500 bg-blue-50 dark:bg-blue-900/20"
+                              : ""
+                          }`}
+                          onClick={() =>
+                            setSelectedId(selectedId === p.id ? null : p.id)
+                          }
                         >
-                          <td className="p-2 text-slate-900 dark:text-slate-100 text-xs">{p.entry_date}</td>
-                          <td className="p-2 text-slate-700 dark:text-slate-300 text-xs">
-                            <div className="max-w-20 truncate" title={supplier?.name || `#${p.supplier_id}`}>
+                          <td className="p-2 text-xs text-slate-900 dark:text-slate-100">
+                            {p.entry_date}
+                          </td>
+                          <td className="p-2 text-xs text-slate-700 dark:text-slate-300">
+                            <div
+                              className="max-w-20 truncate"
+                              title={supplier?.name || `#${p.supplier_id}`}
+                            >
                               {supplier?.name || `#${p.supplier_id}`}
                             </div>
                           </td>
-                          <td className="p-2 font-medium text-slate-900 dark:text-slate-100 text-xs">{p.invoice_no}</td>
-                          <td className="p-2 text-slate-900 dark:text-slate-100 text-xs">{p.date}</td>
-                          <td className="p-2 text-right font-mono text-slate-900 dark:text-slate-100 text-xs">
+                          <td className="p-2 text-xs font-medium text-slate-900 dark:text-slate-100">
+                            {p.invoice_no}
+                          </td>
+                          <td className="p-2 text-xs text-slate-900 dark:text-slate-100">
+                            {p.date}
+                          </td>
+                          <td className="p-2 text-right font-mono text-xs text-slate-900 dark:text-slate-100">
                             ₹{p.basic_value.toFixed(2)}
                           </td>
-                          <td className="p-2 text-center font-mono text-slate-900 dark:text-slate-100 text-xs">{p.gst_rate}%</td>
-                          <td className="p-2 text-right font-mono text-slate-900 dark:text-slate-100 text-xs">
+                          <td className="p-2 text-center font-mono text-xs text-slate-900 dark:text-slate-100">
+                            {p.gst_rate}%
+                          </td>
+                          <td className="p-2 text-right font-mono text-xs text-slate-900 dark:text-slate-100">
                             ₹{p.sgst.toFixed(2)}
                           </td>
-                          <td className="p-2 text-right font-mono text-slate-900 dark:text-slate-100 text-xs">₹{p.cgst.toFixed(2)}</td>
-                          <td className="p-2 text-right font-mono text-slate-900 dark:text-slate-100 text-xs">
+                          <td className="p-2 text-right font-mono text-xs text-slate-900 dark:text-slate-100">
+                            ₹{p.cgst.toFixed(2)}
+                          </td>
+                          <td className="p-2 text-right font-mono text-xs text-slate-900 dark:text-slate-100">
                             ₹{p.igst.toFixed(2)}
                           </td>
-                          <td className="p-2 text-right font-mono text-slate-900 dark:text-slate-100 text-xs">
+                          <td className="p-2 text-right font-mono text-xs text-slate-900 dark:text-slate-100">
                             ₹{p.tds_value.toFixed(2)}
                           </td>
-                          <td className="p-2 text-right font-mono font-bold text-base text-blue-700 dark:text-blue-300">
+                          <td className="p-2 text-right font-mono text-base font-bold text-blue-700 dark:text-blue-300">
                             ₹{p.invoice_value.toFixed(2)}
                           </td>
                           <td className="p-2 text-center text-xs">
-                            <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                              p.status === 'uploaded' ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' :
-                              p.status === 'pending' ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200' :
-                              'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200'
-                            }`}>
+                            <span
+                              className={`rounded-full px-2 py-1 text-xs font-medium ${
+                                p.status === "uploaded"
+                                  ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
+                                  : p.status === "pending"
+                                    ? "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200"
+                                    : "bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200"
+                              }`}
+                            >
                               {p.status}
                             </span>
                           </td>
                           <td className="p-2 text-right">
                             <button
                               type="button"
-                              className="text-xs px-2 py-1 mr-2 rounded border border-slate-300 hover:bg-slate-100 dark:border-slate-600 dark:hover:bg-slate-700"
+                              className="mr-2 rounded border border-slate-300 px-2 py-1 text-xs hover:bg-slate-100 dark:border-slate-600 dark:hover:bg-slate-700"
                               onClick={(e) => {
                                 e.stopPropagation();
                                 setEditing(p);
                                 // also reflect in URL for deep-link
-                                searchParams.set('edit', String(p.id));
-                                setSearchParams(searchParams, { replace: true });
+                                searchParams.set("edit", String(p.id));
+                                setSearchParams(searchParams, {
+                                  replace: true,
+                                });
                                 // focus top
-                                window.scrollTo({ top: 0, behavior: 'smooth' });
+                                window.scrollTo({ top: 0, behavior: "smooth" });
                               }}
-                            >Edit</button>
+                            >
+                              Edit
+                            </button>
                             <button
                               type="button"
-                              className="text-xs px-2 py-1 rounded border border-red-300 text-red-700 hover:bg-red-50 dark:border-red-600 dark:text-red-300 dark:hover:bg-red-900/20"
+                              className="rounded border border-red-300 px-2 py-1 text-xs text-red-700 hover:bg-red-50 dark:border-red-600 dark:text-red-300 dark:hover:bg-red-900/20"
                               onClick={async (e) => {
                                 e.stopPropagation();
-                                if (confirm('Delete this purchase?')) {
+                                if (confirm("Delete this purchase?")) {
                                   await deletePurchase.mutateAsync(p.id);
                                   refetch();
                                 }
                               }}
-                            >Delete</button>
+                            >
+                              Delete
+                            </button>
                           </td>
                         </tr>
                       );
@@ -190,63 +268,112 @@ export function PurchaseFormPage() {
 
           {/* Purchase Details Panel */}
           {selectedId && (
-            <div className="bg-white dark:bg-slate-900 rounded-lg border shadow-sm">
-              <div className="p-4 border-b border-slate-200 dark:border-slate-700">
-                <h3 className="font-semibold text-slate-800 dark:text-slate-200">Purchase Details</h3>
+            <div className="rounded-lg border bg-white shadow-sm dark:bg-slate-900">
+              <div className="border-b border-slate-200 p-4 dark:border-slate-700">
+                <h3 className="font-semibold text-slate-800 dark:text-slate-200">
+                  Purchase Details
+                </h3>
               </div>
               <div className="p-4">
                 {items.isLoading ? (
-                  <div className="text-center py-4">
-                    <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600 mx-auto"></div>
-                    <p className="text-sm text-slate-500 mt-2">Loading details...</p>
+                  <div className="py-4 text-center">
+                    <div className="mx-auto h-6 w-6 animate-spin rounded-full border-b-2 border-blue-600"></div>
+                    <p className="mt-2 text-sm text-slate-500">
+                      Loading details...
+                    </p>
                   </div>
                 ) : items.isError ? (
-                  <div className="text-center py-4 text-red-500">
+                  <div className="py-4 text-center text-red-500">
                     <p className="text-sm">Failed to load details</p>
                   </div>
                 ) : (
                   <div className="space-y-3">
                     {/* Purchase Summary */}
                     {(() => {
-                      const purchase = data?.data?.find(p => p.id === selectedId);
-                      const supplier = suppliers.find(s => s.id === purchase?.supplier_id);
+                      const purchase = data?.data?.find(
+                        (p) => p.id === selectedId,
+                      );
+                      const supplier = suppliers.find(
+                        (s) => s.id === purchase?.supplier_id,
+                      );
                       return purchase ? (
-                        <div className="bg-slate-50 dark:bg-slate-800 rounded-lg p-3">
+                        <div className="rounded-lg bg-slate-50 p-3 dark:bg-slate-800">
                           <div className="grid grid-cols-2 gap-2 text-xs">
-                            <div><span className="text-slate-500">Supplier:</span> <span className="font-medium">{supplier?.name}</span></div>
-                            <div><span className="text-slate-500">GST Rate:</span> <span className="font-medium">{purchase.gst_rate}%</span></div>
-                            <div><span className="text-slate-500">CGST:</span> <span className="font-medium">₹{purchase.cgst.toFixed(2)}</span></div>
-                            <div><span className="text-slate-500">SGST:</span> <span className="font-medium">₹{purchase.sgst.toFixed(2)}</span></div>
-                            <div><span className="text-slate-500">IGST:</span> <span className="font-medium">₹{purchase.igst.toFixed(2)}</span></div>
-                            <div><span className="text-slate-500">TDS:</span> <span className="font-medium text-red-600">-₹{purchase.tds_value.toFixed(2)}</span></div>
+                            <div>
+                              <span className="text-slate-500">Supplier:</span>{" "}
+                              <span className="font-medium">
+                                {supplier?.name}
+                              </span>
+                            </div>
+                            <div>
+                              <span className="text-slate-500">GST Rate:</span>{" "}
+                              <span className="font-medium">
+                                {purchase.gst_rate}%
+                              </span>
+                            </div>
+                            <div>
+                              <span className="text-slate-500">CGST:</span>{" "}
+                              <span className="font-medium">
+                                ₹{purchase.cgst.toFixed(2)}
+                              </span>
+                            </div>
+                            <div>
+                              <span className="text-slate-500">SGST:</span>{" "}
+                              <span className="font-medium">
+                                ₹{purchase.sgst.toFixed(2)}
+                              </span>
+                            </div>
+                            <div>
+                              <span className="text-slate-500">IGST:</span>{" "}
+                              <span className="font-medium">
+                                ₹{purchase.igst.toFixed(2)}
+                              </span>
+                            </div>
+                            <div>
+                              <span className="text-slate-500">TDS:</span>{" "}
+                              <span className="font-medium text-red-600">
+                                -₹{purchase.tds_value.toFixed(2)}
+                              </span>
+                            </div>
                           </div>
                           {purchase.narration && (
-                            <div className="mt-2 pt-2 border-t border-slate-200 dark:border-slate-700">
+                            <div className="mt-2 border-t border-slate-200 pt-2 dark:border-slate-700">
                               <p className="text-xs text-slate-600 dark:text-slate-400">
-                                <span className="font-medium">Narration:</span> {purchase.narration}
+                                <span className="font-medium">Narration:</span>{" "}
+                                {purchase.narration}
                               </p>
                             </div>
                           )}
                         </div>
                       ) : null;
                     })()}
-                    
+
                     {/* Items */}
                     <div>
-                      <h4 className="text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Items</h4>
+                      <h4 className="mb-2 text-sm font-medium text-slate-700 dark:text-slate-300">
+                        Items
+                      </h4>
                       <div className="space-y-2">
                         {(items.data || []).map((it) => (
-                          <div key={it.id} className="border border-slate-200 dark:border-slate-700 rounded p-2">
+                          <div
+                            key={it.id}
+                            className="rounded border border-slate-200 p-2 dark:border-slate-700"
+                          >
                             <div className="flex items-center justify-between">
                               <div className="flex-1">
                                 <p className="text-sm font-medium text-slate-900 dark:text-slate-100">
-                                  {it.part_no && <span className="text-blue-600 dark:text-blue-400">{it.part_no} - </span>}
+                                  {it.part_no && (
+                                    <span className="text-blue-600 dark:text-blue-400">
+                                      {it.part_no} -{" "}
+                                    </span>
+                                  )}
                                   {it.description}
                                 </p>
                               </div>
-                              <div className="text-right ml-2">
-                                <p className="text-sm font-mono text-slate-900 dark:text-slate-100">
-                                  {it.qty} × ₹{it.price.toFixed(2)} = ₹{it.amount.toFixed(2)}
+                              <div className="ml-2 text-right">
+                                <p className="font-mono text-sm text-slate-900 dark:text-slate-100">
+                                  {it.qty} × ₹{it.price.toFixed(2)} = ₹
+                                  {it.amount.toFixed(2)}
                                 </p>
                               </div>
                             </div>

@@ -11,17 +11,31 @@ export function Sidebar() {
   const { user, logout } = useAppStore();
 
   return (
-    <aside className="w-60 shrink-0 border-r h-svh sticky top-0 flex flex-col">
+    <aside className="sticky top-0 flex h-svh w-60 shrink-0 flex-col border-r">
       <div className="p-3 text-lg font-semibold">Inventory</div>
-      <nav className="p-2 space-y-1 flex-1">
-        <NavLink to="/" className={linkCls}>Dashboard</NavLink>
-        <NavLink to="/purchases" className={linkCls}>Purchases</NavLink>
-        <NavLink to="/suppliers" className={linkCls}>Suppliers</NavLink>
-        <NavLink to="/items" className={linkCls}>Items</NavLink>
-        <NavLink to="/reports" className={linkCls}>Reports</NavLink>
-        <NavLink to="/settings" className={linkCls}>Settings</NavLink>
+      <nav className="flex-1 space-y-1 p-2">
+        <NavLink to="/" className={linkCls}>
+          Dashboard
+        </NavLink>
+        <NavLink to="/purchases" className={linkCls}>
+          Purchases
+        </NavLink>
+        <NavLink to="/suppliers" className={linkCls}>
+          Suppliers
+        </NavLink>
+        <NavLink to="/items" className={linkCls}>
+          Items
+        </NavLink>
+        <NavLink to="/reports" className={linkCls}>
+          Reports
+        </NavLink>
+        <NavLink to="/settings" className={linkCls}>
+          Settings
+        </NavLink>
         {user?.role === "admin" && (
-          <NavLink to="/users" className={linkCls}>Users</NavLink>
+          <NavLink to="/users" className={linkCls}>
+            Users
+          </NavLink>
         )}
       </nav>
       <div className="p-2">

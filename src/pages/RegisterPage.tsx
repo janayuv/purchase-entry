@@ -1,5 +1,11 @@
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { invoke } from "@tauri-apps/api/core";
@@ -39,7 +45,7 @@ export function RegisterPage() {
   };
 
   return (
-    <div className="min-h-svh flex items-center justify-center">
+    <div className="flex min-h-svh items-center justify-center">
       <Card className="w-full max-w-sm">
         <CardHeader>
           <CardTitle>Register</CardTitle>
@@ -51,7 +57,9 @@ export function RegisterPage() {
             <Input
               id="username"
               value={username}
-              onChange={(e: ChangeEvent<HTMLInputElement>) => setUsername(e.target.value)}
+              onChange={(e: ChangeEvent<HTMLInputElement>) =>
+                setUsername(e.target.value)
+              }
               required
             />
           </div>
@@ -61,7 +69,9 @@ export function RegisterPage() {
               id="password"
               type="password"
               value={password}
-              onChange={(e: ChangeEvent<HTMLInputElement>) => setPassword(e.target.value)}
+              onChange={(e: ChangeEvent<HTMLInputElement>) =>
+                setPassword(e.target.value)
+              }
               required
             />
           </div>

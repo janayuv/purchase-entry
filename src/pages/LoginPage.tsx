@@ -1,5 +1,11 @@
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAppStore } from "@/store/useAppStore";
@@ -26,7 +32,9 @@ export function LoginPage() {
       return;
     }
     try {
-      const res = await invoke<LoginResponse>("login", { payload: { username, password } });
+      const res = await invoke<LoginResponse>("login", {
+        payload: { username, password },
+      });
       login(res.user, res.token);
       navigate("/");
     } catch (err) {
@@ -39,11 +47,13 @@ export function LoginPage() {
   };
 
   return (
-    <div className="min-h-svh flex items-center justify-center">
+    <div className="flex min-h-svh items-center justify-center">
       <Card className="w-full max-w-sm">
         <CardHeader>
           <CardTitle>Login</CardTitle>
-          <CardDescription>Enter your credentials to access the application.</CardDescription>
+          <CardDescription>
+            Enter your credentials to access the application.
+          </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-2">
@@ -51,7 +61,9 @@ export function LoginPage() {
             <Input
               id="username"
               value={username}
-              onChange={(e: ChangeEvent<HTMLInputElement>) => setUsername(e.target.value)}
+              onChange={(e: ChangeEvent<HTMLInputElement>) =>
+                setUsername(e.target.value)
+              }
               required
             />
           </div>
@@ -61,7 +73,9 @@ export function LoginPage() {
               id="password"
               type="password"
               value={password}
-              onChange={(e: ChangeEvent<HTMLInputElement>) => setPassword(e.target.value)}
+              onChange={(e: ChangeEvent<HTMLInputElement>) =>
+                setPassword(e.target.value)
+              }
               required
             />
           </div>

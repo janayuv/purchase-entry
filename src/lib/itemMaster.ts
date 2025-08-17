@@ -53,9 +53,10 @@ export function useItemMaster() {
   function search(query: string) {
     const q = query.trim().toLowerCase();
     if (!q) return load();
-    return load().filter((it) =>
-      (it.part_no || "").toLowerCase().includes(q) ||
-      it.description.toLowerCase().includes(q)
+    return load().filter(
+      (it) =>
+        (it.part_no || "").toLowerCase().includes(q) ||
+        it.description.toLowerCase().includes(q),
     );
   }
 

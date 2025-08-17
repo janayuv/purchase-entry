@@ -4,7 +4,7 @@ on:
   push:
     branches: [main, master]
     tags:
-      - 'v*'
+      - "v*"
   pull_request:
     branches: [main, master]
   workflow_dispatch:
@@ -110,8 +110,8 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
-          cache: 'npm'
+          node-version: "20"
+          cache: "npm"
 
       - name: Install JS dependencies
         run: npm ci
@@ -147,7 +147,6 @@ jobs:
       - name: Tauri build (npm)
         run: npm run tauri:build
 
-
   # Release installers on tags using official tauri-action
   release-installers:
     name: Release Installers (${{ matrix.os }})
@@ -164,8 +163,8 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
-          cache: 'npm'
+          node-version: "20"
+          cache: "npm"
 
       - name: Install JS dependencies
         run: npm ci

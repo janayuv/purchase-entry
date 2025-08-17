@@ -28,7 +28,13 @@ export function ItemsPage() {
 
   function resetForm() {
     setEditing(null);
-    setForm({ part_no: "", description: "", gst_percent: null, supplier_id: null, active: true });
+    setForm({
+      part_no: "",
+      description: "",
+      gst_percent: null,
+      supplier_id: null,
+      active: true,
+    });
   }
 
   function startEdit(it: ItemMasterItem) {
@@ -57,22 +63,27 @@ export function ItemsPage() {
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <h2 className="text-xl font-semibold">Items</h2>
-        <div className="text-sm text-muted-foreground">{count} item(s)</div>
+        <div className="text-muted-foreground text-sm">{count} item(s)</div>
       </div>
 
       <div className="grid gap-6 md:grid-cols-[1fr_420px]">
         <div className="space-y-2">
           <div className="flex items-center gap-2">
             <input
-              className="border rounded px-2 py-1 text-sm"
+              className="rounded border px-2 py-1 text-sm"
               placeholder="Search part no / description"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
             />
-            <button className="px-2 py-1 text-xs rounded border" onClick={() => setQuery("")}>Clear</button>
+            <button
+              className="rounded border px-2 py-1 text-xs"
+              onClick={() => setQuery("")}
+            >
+              Clear
+            </button>
           </div>
 
-          <div className="overflow-x-auto border rounded-md">
+          <div className="overflow-x-auto rounded-md border">
             <table className="min-w-full text-sm">
               <thead className="bg-muted text-left">
                 <tr>
@@ -81,7 +92,7 @@ export function ItemsPage() {
                   <th className="p-2 text-right">GST %</th>
                   <th className="p-2">Supplier</th>
                   <th className="p-2">Active</th>
-                  <th className="p-2 w-40">Actions</th>
+                  <th className="w-40 p-2">Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -89,12 +100,30 @@ export function ItemsPage() {
                   <tr key={it.id} className="border-t">
                     <td className="p-2">{it.part_no || "-"}</td>
                     <td className="p-2">{it.description}</td>
-                    <td className="p-2 text-right">{it.gst_percent == null ? '-' : it.gst_percent.toFixed(2)}</td>
-                    <td className="p-2">{suppliers.find((s) => s.id === (it.supplier_id ?? -1))?.name || "-"}</td>
+                    <td className="p-2 text-right">
+                      {it.gst_percent == null ? "-" : it.gst_percent.toFixed(2)}
+                    </td>
+                    <td className="p-2">
+                      {suppliers.find((s) => s.id === (it.supplier_id ?? -1))
+                        ?.name || "-"}
+                    </td>
                     <td className="p-2">{it.active ? "Yes" : "No"}</td>
-                    <td className="p-2 flex gap-2">
-                      <button className="px-2 py-1 text-xs rounded border" onClick={() => startEdit(it)}>Edit</button>
-                      <button className="px-2 py-1 text-xs rounded border border-destructive text-destructive" onClick={() => { api.remove(it.id); setItems(api.search(query)); }}>Delete</button>
+                    <td className="flex gap-2 p-2">
+                      <button
+                        className="rounded border px-2 py-1 text-xs"
+                        onClick={() => startEdit(it)}
+                      >
+                        Edit
+                      </button>
+                      <button
+                        className="border-destructive text-destructive rounded border px-2 py-1 text-xs"
+                        onClick={() => {
+                          api.remove(it.id);
+                          setItems(api.search(query));
+                        }}
+                      >
+                        Delete
+                      </button>
                     </td>
                   </tr>
                 ))}
@@ -103,51 +132,92 @@ export function ItemsPage() {
           </div>
         </div>
 
-        <form onSubmit={onSubmit} className="space-y-3 border rounded-md p-4">
+        <form onSubmit={onSubmit} className="space-y-3 rounded-md border p-4">
           <h3 className="font-medium">{editing ? "Edit Item" : "Add Item"}</h3>
           <div className="grid gap-2">
             <label className="text-xs">Part No</label>
-            <input className="border rounded px-2 py-1" value={form.part_no ?? ""}
-              onChange={(e) => setForm((f) => ({ ...f, part_no: e.target.value }))} />
+            <input
+              className="rounded border px-2 py-1"
+              value={form.part_no ?? ""}
+              onChange={(e) =>
+                setForm((f) => ({ ...f, part_no: e.target.value }))
+              }
+            />
           </div>
           <div className="grid gap-2">
             <label className="text-xs">Description</label>
-            <input className="border rounded px-2 py-1" value={form.description}
-              onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))} required />
+            <input
+              className="rounded border px-2 py-1"
+              value={form.description}
+              onChange={(e) =>
+                setForm((f) => ({ ...f, description: e.target.value }))
+              }
+              required
+            />
           </div>
           <div className="grid gap-2">
             <label className="text-xs">GST %</label>
             <input
               type="number"
-              className="border rounded px-2 py-1"
-              value={form.gst_percent ?? ''}
+              className="rounded border px-2 py-1"
+              value={form.gst_percent ?? ""}
               onChange={(e) => {
                 const v = e.target.value;
-                setForm((f) => ({ ...f, gst_percent: v === '' ? null : Number(v) }));
+                setForm((f) => ({
+                  ...f,
+                  gst_percent: v === "" ? null : Number(v),
+                }));
               }}
             />
           </div>
           <div className="grid gap-2">
             <label className="text-xs">Supplier</label>
-            <select className="border rounded px-2 py-1" value={form.supplier_id ?? ""}
-              onChange={(e) => setForm((f) => ({ ...f, supplier_id: e.target.value ? Number(e.target.value) : null }))}>
+            <select
+              className="rounded border px-2 py-1"
+              value={form.supplier_id ?? ""}
+              onChange={(e) =>
+                setForm((f) => ({
+                  ...f,
+                  supplier_id: e.target.value ? Number(e.target.value) : null,
+                }))
+              }
+            >
               <option value="">Unlinked</option>
               {suppliers.map((s) => (
-                <option key={s.id} value={s.id}>{s.name}</option>
+                <option key={s.id} value={s.id}>
+                  {s.name}
+                </option>
               ))}
             </select>
           </div>
           <div className="flex items-center gap-2">
-            <input id="active" type="checkbox" checked={!!form.active}
-              onChange={(e) => setForm((f) => ({ ...f, active: !!e.target.checked }))} />
-            <label htmlFor="active" className="text-sm">Active</label>
+            <input
+              id="active"
+              type="checkbox"
+              checked={!!form.active}
+              onChange={(e) =>
+                setForm((f) => ({ ...f, active: !!e.target.checked }))
+              }
+            />
+            <label htmlFor="active" className="text-sm">
+              Active
+            </label>
           </div>
           <div className="flex gap-2 pt-2">
-            <button type="submit" className="px-3 py-1.5 rounded bg-primary text-primary-foreground">
+            <button
+              type="submit"
+              className="bg-primary text-primary-foreground rounded px-3 py-1.5"
+            >
               {editing ? "Update" : "Add"}
             </button>
             {editing && (
-              <button type="button" className="px-3 py-1.5 rounded border" onClick={resetForm}>Cancel</button>
+              <button
+                type="button"
+                className="rounded border px-3 py-1.5"
+                onClick={resetForm}
+              >
+                Cancel
+              </button>
             )}
           </div>
         </form>

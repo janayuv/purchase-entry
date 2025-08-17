@@ -127,7 +127,7 @@ export interface PurchasesBySupplier {
 export interface PurchaseFilters {
   supplier_id?: number;
   date_from?: string; // inclusive
-  date_to?: string;   // inclusive
+  date_to?: string; // inclusive
   gst_rate?: number;
   invoice_no?: string;
   status?: string;

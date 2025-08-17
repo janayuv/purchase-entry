@@ -6,7 +6,7 @@ export function ThemeToggle() {
   const next = theme === "dark" ? "light" : "dark";
   return (
     <button
-      className="text-sm px-3 py-1.5 rounded border hover:bg-accent"
+      className="hover:bg-accent rounded border px-3 py-1.5 text-sm"
       onClick={() => setTheme(next)}
       title="Toggle theme"
     >

@@ -1,14 +1,35 @@
 import { useEffect, useMemo, useState, useRef, useCallback } from "react";
-import { useAddPurchase, useSuppliers, useUpdatePurchase } from "../../lib/queries";
-import type { PurchaseCreate, PurchaseItemPayload, Supplier, PurchaseEntry, PurchaseUpdate } from "../../lib/types";
+import {
+  useAddPurchase,
+  useSuppliers,
+  useUpdatePurchase,
+} from "../../lib/queries";
+import type {
+  PurchaseCreate,
+  PurchaseItemPayload,
+  Supplier,
+  PurchaseEntry,
+  PurchaseUpdate,
+} from "../../lib/types";
 import { useItemMaster } from "../../lib/itemMaster";
 
-export function PurchaseForm({ onCreated, onUpdated, initial }: { onCreated?: () => void; onUpdated?: () => void; initial?: PurchaseEntry | null }) {
+export function PurchaseForm({
+  onCreated,
+  onUpdated,
+  initial,
+}: {
+  onCreated?: () => void;
+  onUpdated?: () => void;
+  initial?: PurchaseEntry | null;
+}) {
   const addMutation = useAddPurchase();
   const updateMutation = useUpdatePurchase();
   const { data: suppliersPage } = useSuppliers();
-  const suppliers: Supplier[] = useMemo(() => suppliersPage?.data || [], [suppliersPage]);
-  
+  const suppliers: Supplier[] = useMemo(
+    () => suppliersPage?.data || [],
+    [suppliersPage],
+  );
+
   // Form refs for keyboard navigation
   const supplierRef = useRef<HTMLInputElement>(null);
   const invoiceNoRef = useRef<HTMLInputElement>(null);
@@ -16,7 +37,9 @@ export function PurchaseForm({ onCreated, onUpdated, initial }: { onCreated?: ()
   const assessableRef = useRef<HTMLInputElement>(null);
   const submitRef = useRef<HTMLButtonElement>(null);
 
-  const [entryDate, setEntryDate] = useState<string>(new Date().toISOString().slice(0, 10));
+  const [entryDate, setEntryDate] = useState<string>(
+    new Date().toISOString().slice(0, 10),
+  );
   const [supplierId, setSupplierId] = useState<number | "">("");
   const [supplierSearch, setSupplierSearch] = useState("");
   const [invoiceNo, setInvoiceNo] = useState("");
@@ -27,7 +50,11 @@ export function PurchaseForm({ onCreated, onUpdated, initial }: { onCreated?: ()
   const [assessable, setAssessable] = useState<number | "">("");
   const [difference, setDifference] = useState<number | "">("");
   const [partQuery, setPartQuery] = useState("");
-  const [part, setPart] = useState<{ id?: number; part_no?: string | null; description: string } | null>(null);
+  const [part, setPart] = useState<{
+    id?: number;
+    part_no?: string | null;
+    description: string;
+  } | null>(null);
   const [openPartSuggest, setOpenPartSuggest] = useState(false);
   const [openSupplierSuggest, setOpenSupplierSuggest] = useState(false);
   const [lastEntry, setLastEntry] = useState<{
@@ -44,16 +71,18 @@ export function PurchaseForm({ onCreated, onUpdated, initial }: { onCreated?: ()
   const assessableNum = Number(assessable) || 0;
   const gstRateNum = Number(gstRate) || 0;
   const differenceNum = Number(difference) || 0;
-  
+
   // GST calculation - only on base amount (assessable), not on difference
   const gstAmount = assessableNum * (gstRateNum / 100);
   const cgst = gstRateNum > 0 && isTN ? gstAmount / 2 : 0;
   const sgst = gstRateNum > 0 && isTN ? gstAmount / 2 : 0;
   const igst = gstRateNum > 0 && !isTN ? gstAmount : 0;
-  
+
   // TDS calculation on base amount only
-  const tds = selectedSupplier?.tds_flag ? (assessableNum * ((selectedSupplier.tds_rate || 0) / 100)) : 0;
-  
+  const tds = selectedSupplier?.tds_flag
+    ? assessableNum * ((selectedSupplier.tds_rate || 0) / 100)
+    : 0;
+
   // Total calculation: base amount + GST + difference (TDS excluded as per requirement)
   const invoiceValue = assessableNum + cgst + sgst + igst + differenceNum;
 
@@ -62,16 +91,17 @@ export function PurchaseForm({ onCreated, onUpdated, initial }: { onCreated?: ()
     if (!initial) return;
     try {
       // entry_date like 'YYYY-MM-DD HH:MM:SS' -> take date part
-      const ed = (initial.entry_date || '').slice(0, 10);
+      const ed = (initial.entry_date || "").slice(0, 10);
       setEntryDate(ed || new Date().toISOString().slice(0, 10));
       setSupplierId(initial.supplier_id);
-      const supplierName = suppliers.find(s => s.id === initial.supplier_id)?.name || "";
+      const supplierName =
+        suppliers.find((s) => s.id === initial.supplier_id)?.name || "";
       setSupplierSearch(supplierName);
       setInvoiceNo(initial.invoice_no);
       // stored date is YYYY-MM-DD; convert back to dd-mm-yy for the input UX
       const d = initial.date;
       if (d && d.length === 10) {
-        const [y, m, day] = d.split('-');
+        const [y, m, day] = d.split("-");
         setInvoiceDate(`${day}-${m}-${y.slice(2)}`);
       } else {
         setInvoiceDate(initial.date || "");
@@ -96,25 +126,26 @@ export function PurchaseForm({ onCreated, onUpdated, initial }: { onCreated?: ()
   const autoNarration = useCallback(() => {
     const partText = part?.description || partQuery || "part";
     const supplierText = selectedSupplier?.name || "supplier";
-    const tdsText = selectedSupplier?.tds_flag && (selectedSupplier?.tds_rate || 0) > 0
-      ? ` TDS amounted ${tds.toFixed(2)} deducted for ${(selectedSupplier.tds_rate || 0).toFixed(2)}% Assessable value`
-      : "";
+    const tdsText =
+      selectedSupplier?.tds_flag && (selectedSupplier?.tds_rate || 0) > 0
+        ? ` TDS amounted ${tds.toFixed(2)} deducted for ${(selectedSupplier.tds_rate || 0).toFixed(2)}% Assessable value`
+        : "";
     return `${partText} purchased from ${supplierText} Invoice no ${invoiceNo || "-"} / ${invoiceDate}${tdsText}`;
   }, [part, partQuery, selectedSupplier, tds, invoiceNo, invoiceDate]);
 
   // Convert dd-mm-yy format to YYYY-MM-DD for database
   const convertDateFormat = useCallback((dateStr: string): string => {
     if (!dateStr) return "";
-    
+
     // Handle dd-mm-yy format
-    const parts = dateStr.split('-');
+    const parts = dateStr.split("-");
     if (parts.length === 3) {
       const [day, month, year] = parts;
       // Convert 2-digit year to 4-digit (assuming 20xx for years 00-99)
       const fullYear = year.length === 2 ? `20${year}` : year;
-      return `${fullYear}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
+      return `${fullYear}-${month.padStart(2, "0")}-${day.padStart(2, "0")}`;
     }
-    
+
     // If already in correct format or invalid, return as is
     return dateStr;
   }, []);
@@ -167,23 +198,25 @@ export function PurchaseForm({ onCreated, onUpdated, initial }: { onCreated?: ()
 
   // Keyboard shortcuts and navigation
   const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.ctrlKey && e.key === 'Enter') {
+    if (e.ctrlKey && e.key === "Enter") {
       e.preventDefault();
       // Simulate down arrow key behavior - focus next field or submit
       const currentElement = document.activeElement as HTMLElement;
-      const focusableElements = Array.from(document.querySelectorAll(
-        'input, button, select, textarea, [tabindex]:not([tabindex="-1"])'
-      )) as HTMLElement[];
+      const focusableElements = Array.from(
+        document.querySelectorAll(
+          'input, button, select, textarea, [tabindex]:not([tabindex="-1"])',
+        ),
+      ) as HTMLElement[];
       const currentIndex = focusableElements.indexOf(currentElement);
       if (currentIndex >= 0 && currentIndex < focusableElements.length - 1) {
         focusableElements[currentIndex + 1].focus();
       } else {
         submitRef.current?.click();
       }
-    } else if (e.ctrlKey && e.key === 'd') {
+    } else if (e.ctrlKey && e.key === "d") {
       e.preventDefault();
       duplicateLastEntry();
-    } else if (e.key === 'Tab') {
+    } else if (e.key === "Tab") {
       // Enhanced tab navigation handled by tabIndex
     }
   };
@@ -242,15 +275,17 @@ export function PurchaseForm({ onCreated, onUpdated, initial }: { onCreated?: ()
       tds_value: Number(tds.toFixed(2)),
       narration: narrationTouched ? narration : autoNarration(),
       status: "uploaded",
-      items: part ? [
-        {
-          part_no: part.part_no || "",
-          description: part.description,
-          qty: 1,
-          price: Number(assessableNum.toFixed(2)),
-          amount: Number(assessableNum.toFixed(2)),
-        } as PurchaseItemPayload,
-      ] : [],
+      items: part
+        ? [
+            {
+              part_no: part.part_no || "",
+              description: part.description,
+              qty: 1,
+              price: Number(assessableNum.toFixed(2)),
+              amount: Number(assessableNum.toFixed(2)),
+            } as PurchaseItemPayload,
+          ]
+        : [],
     };
 
     // Save current entry for duplication
@@ -263,7 +298,7 @@ export function PurchaseForm({ onCreated, onUpdated, initial }: { onCreated?: ()
     });
 
     await addMutation.mutateAsync(payload);
-    
+
     // Reset form but keep dates
     setSupplierId("");
     setSupplierSearch("");
@@ -275,27 +310,30 @@ export function PurchaseForm({ onCreated, onUpdated, initial }: { onCreated?: ()
     setPartQuery("");
     setNarration("");
     setNarrationTouched(false);
-    
+
     // Focus on supplier for next entry
     setTimeout(() => supplierRef.current?.focus(), 100);
     onCreated?.();
   }
 
   return (
-    <div className="bg-gradient-to-br from-slate-50 to-blue-50 dark:from-slate-900 dark:to-slate-800 p-4 rounded-lg border shadow-sm">
+    <div className="rounded-lg border bg-gradient-to-br from-slate-50 to-blue-50 p-4 shadow-sm dark:from-slate-900 dark:to-slate-800">
       {/* Quick Actions Header */}
-      <div className="flex items-center justify-between mb-4 pb-2 border-b">
+      <div className="mb-4 flex items-center justify-between border-b pb-2">
         <div className="flex items-center gap-3">
-          <h3 className="font-semibold text-slate-700 dark:text-slate-200">{initial ? 'Edit Purchase' : 'Quick Entry'}</h3>
-          <div className="text-xs text-slate-500 bg-slate-100 dark:bg-slate-700 px-2 py-1 rounded">
-            {initial ? 'Ctrl+Enter: Update' : 'Ctrl+Enter: Save'} | Ctrl+D: Duplicate Last
+          <h3 className="font-semibold text-slate-700 dark:text-slate-200">
+            {initial ? "Edit Purchase" : "Quick Entry"}
+          </h3>
+          <div className="rounded bg-slate-100 px-2 py-1 text-xs text-slate-500 dark:bg-slate-700">
+            {initial ? "Ctrl+Enter: Update" : "Ctrl+Enter: Save"} | Ctrl+D:
+            Duplicate Last
           </div>
         </div>
         {!initial && lastEntry && (
           <button
             type="button"
             onClick={duplicateLastEntry}
-            className="text-xs px-2 py-1 bg-blue-100 hover:bg-blue-200 dark:bg-blue-900 dark:hover:bg-blue-800 text-blue-700 dark:text-blue-200 rounded transition-colors"
+            className="rounded bg-blue-100 px-2 py-1 text-xs text-blue-700 transition-colors hover:bg-blue-200 dark:bg-blue-900 dark:text-blue-200 dark:hover:bg-blue-800"
           >
             Duplicate Last Entry
           </button>
@@ -304,34 +342,43 @@ export function PurchaseForm({ onCreated, onUpdated, initial }: { onCreated?: ()
 
       <form onSubmit={onSubmit} onKeyDown={handleKeyDown} className="space-y-3">
         {/* Compact Main Entry Row */}
-        <div className="grid grid-cols-12 gap-2 items-end">
+        <div className="grid grid-cols-12 items-end gap-2">
           {/* Entry Date */}
           <div className="col-span-2">
-            <label className="block text-xs font-medium text-slate-600 dark:text-slate-300 mb-1">Entry Date</label>
-            <input 
-              type="date" 
-              className="w-full px-2 py-1.5 text-sm border border-slate-300 dark:border-slate-600 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-slate-800" 
+            <label className="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-300">
+              Entry Date
+            </label>
+            <input
+              type="date"
+              className="w-full rounded border border-slate-300 px-2 py-1.5 text-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500 dark:border-slate-600 dark:bg-slate-800"
               value={entryDate}
-              onChange={(e) => setEntryDate(e.target.value)} 
+              onChange={(e) => setEntryDate(e.target.value)}
               tabIndex={1}
-              required 
+              required
             />
           </div>
 
           {/* Supplier */}
-          <div className="col-span-3 relative">
-            <label className="block text-xs font-medium text-slate-600 dark:text-slate-300 mb-1">Supplier *</label>
-            <input 
+          <div className="relative col-span-3">
+            <label className="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-300">
+              Supplier *
+            </label>
+            <input
               ref={supplierRef}
-              className="w-full px-2 py-1.5 text-sm border border-slate-300 dark:border-slate-600 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-slate-800" 
+              className="w-full rounded border border-slate-300 px-2 py-1.5 text-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500 dark:border-slate-600 dark:bg-slate-800"
               placeholder="Type supplier name..."
               value={supplierSearch}
               onFocus={() => setOpenSupplierSuggest(true)}
-              onChange={(e) => { setSupplierSearch(e.target.value); setOpenSupplierSuggest(true); }}
+              onChange={(e) => {
+                setSupplierSearch(e.target.value);
+                setOpenSupplierSuggest(true);
+              }}
               onKeyDown={(e) => {
-                if (e.key === 'Enter' && openSupplierSuggest) {
+                if (e.key === "Enter" && openSupplierSuggest) {
                   e.preventDefault();
-                  const filtered = suppliers.filter((s) => s.name.toLowerCase().includes(supplierSearch.toLowerCase()));
+                  const filtered = suppliers.filter((s) =>
+                    s.name.toLowerCase().includes(supplierSearch.toLowerCase()),
+                  );
                   if (filtered.length > 0) {
                     setSupplierId(filtered[0].id);
                     setSupplierSearch(filtered[0].name);
@@ -344,18 +391,20 @@ export function PurchaseForm({ onCreated, onUpdated, initial }: { onCreated?: ()
                 }
               }}
               tabIndex={2}
-              required 
+              required
             />
             {openSupplierSuggest && (
-              <div className="absolute left-0 right-0 z-20 mt-1 max-h-48 overflow-auto border border-slate-300 dark:border-slate-600 rounded bg-white dark:bg-slate-800 shadow-lg">
+              <div className="absolute right-0 left-0 z-20 mt-1 max-h-48 overflow-auto rounded border border-slate-300 bg-white shadow-lg dark:border-slate-600 dark:bg-slate-800">
                 {suppliers
-                  .filter((s) => s.name.toLowerCase().includes(supplierSearch.toLowerCase()))
+                  .filter((s) =>
+                    s.name.toLowerCase().includes(supplierSearch.toLowerCase()),
+                  )
                   .slice(0, 6)
                   .map((s) => (
                     <button
                       key={s.id}
                       type="button"
-                      className={`w-full text-left px-3 py-2 text-sm hover:bg-blue-50 dark:hover:bg-slate-700 ${supplierId === s.id ? "bg-blue-100 dark:bg-slate-600" : ""}`}
+                      className={`w-full px-3 py-2 text-left text-sm hover:bg-blue-50 dark:hover:bg-slate-700 ${supplierId === s.id ? "bg-blue-100 dark:bg-slate-600" : ""}`}
                       onClick={() => {
                         setSupplierId(s.id);
                         setSupplierSearch(s.name);
@@ -376,86 +425,114 @@ export function PurchaseForm({ onCreated, onUpdated, initial }: { onCreated?: ()
 
           {/* Invoice No */}
           <div className="col-span-2">
-            <label className="block text-xs font-medium text-slate-600 dark:text-slate-300 mb-1">Invoice No *</label>
-            <input 
+            <label className="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-300">
+              Invoice No *
+            </label>
+            <input
               ref={invoiceNoRef}
-              className="w-full px-2 py-1.5 text-sm border border-slate-300 dark:border-slate-600 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-slate-800" 
-              value={invoiceNo} 
+              className="w-full rounded border border-slate-300 px-2 py-1.5 text-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500 dark:border-slate-600 dark:bg-slate-800"
+              value={invoiceNo}
               onChange={(e) => setInvoiceNo(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && partRef.current?.focus()}
+              onKeyDown={(e) => e.key === "Enter" && partRef.current?.focus()}
               tabIndex={3}
-              required 
+              required
             />
           </div>
 
           {/* Invoice Date */}
           <div className="col-span-2">
-            <label className="block text-xs font-medium text-slate-600 dark:text-slate-300 mb-1">Invoice Date</label>
-            <input 
-              type="text" 
-              className="w-full px-2 py-1.5 text-sm border border-slate-300 dark:border-slate-600 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-slate-800" 
+            <label className="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-300">
+              Invoice Date
+            </label>
+            <input
+              type="text"
+              className="w-full rounded border border-slate-300 px-2 py-1.5 text-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500 dark:border-slate-600 dark:bg-slate-800"
               placeholder="dd-mm-yy"
-              value={invoiceDate} 
+              value={invoiceDate}
               onChange={(e) => setInvoiceDate(e.target.value)}
               tabIndex={4}
-              required 
+              required
             />
           </div>
         </div>
 
         {/* Part & Amount Row */}
-        <div className="grid grid-cols-12 gap-2 items-end">
+        <div className="grid grid-cols-12 items-end gap-2">
           {/* Part */}
-          <div className="col-span-5 relative">
-            <label className="block text-xs font-medium text-slate-600 dark:text-slate-300 mb-1">Part *</label>
-            <input 
+          <div className="relative col-span-5">
+            <label className="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-300">
+              Part *
+            </label>
+            <input
               ref={partRef}
-              className="w-full px-2 py-1.5 text-sm border border-slate-300 dark:border-slate-600 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-slate-800" 
+              className="w-full rounded border border-slate-300 px-2 py-1.5 text-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500 dark:border-slate-600 dark:bg-slate-800"
               placeholder="Type part number or description..."
               value={partQuery}
               onFocus={() => setOpenPartSuggest(true)}
-              onChange={(e) => { setPartQuery(e.target.value); setOpenPartSuggest(true); }}
+              onChange={(e) => {
+                setPartQuery(e.target.value);
+                setOpenPartSuggest(true);
+              }}
               onKeyDown={(e) => {
-                if (e.key === 'Enter' && openPartSuggest) {
+                if (e.key === "Enter" && openPartSuggest) {
                   e.preventDefault();
                   const preferred = Number(supplierId) || null;
                   const base = itemApi.search(partQuery);
-                  const list = preferred ? base.filter((x) => (x.supplier_id ?? null) === preferred) : base;
+                  const list = preferred
+                    ? base.filter((x) => (x.supplier_id ?? null) === preferred)
+                    : base;
                   if (list.length > 0) {
                     const s = list[0];
-                    setPart({ id: s.id, part_no: s.part_no || "", description: s.description });
+                    setPart({
+                      id: s.id,
+                      part_no: s.part_no || "",
+                      description: s.description,
+                    });
                     setPartQuery(`${s.part_no || "-"} — ${s.description}`);
-                    if (typeof s.gst_percent === "number" && s.gst_percent > 0) setGstRate(s.gst_percent);
+                    if (typeof s.gst_percent === "number" && s.gst_percent > 0)
+                      setGstRate(s.gst_percent);
                     setOpenPartSuggest(false);
                     assessableRef.current?.focus();
                   }
                 }
               }}
               tabIndex={5}
-              required 
+              required
             />
             {openPartSuggest && partQuery.length > 0 && (
-              <div className="absolute left-0 right-0 z-20 mt-1 max-h-48 overflow-auto border border-slate-300 dark:border-slate-600 rounded bg-white dark:bg-slate-800 shadow-lg">
+              <div className="absolute right-0 left-0 z-20 mt-1 max-h-48 overflow-auto rounded border border-slate-300 bg-white shadow-lg dark:border-slate-600 dark:bg-slate-800">
                 {(() => {
                   const preferred = Number(supplierId) || null;
                   const base = itemApi.search(partQuery);
-                  const filtered = preferred ? base.filter((x) => (x.supplier_id ?? null) === preferred) : base;
+                  const filtered = preferred
+                    ? base.filter((x) => (x.supplier_id ?? null) === preferred)
+                    : base;
                   return filtered.slice(0, 6);
                 })().map((s) => (
-                  <button 
-                    key={s.id} 
-                    type="button" 
-                    className="block w-full text-left px-3 py-2 text-sm hover:bg-blue-50 dark:hover:bg-slate-700"
+                  <button
+                    key={s.id}
+                    type="button"
+                    className="block w-full px-3 py-2 text-left text-sm hover:bg-blue-50 dark:hover:bg-slate-700"
                     onClick={() => {
-                      setPart({ id: s.id, part_no: s.part_no || "", description: s.description });
+                      setPart({
+                        id: s.id,
+                        part_no: s.part_no || "",
+                        description: s.description,
+                      });
                       setPartQuery(`${s.part_no || "-"} — ${s.description}`);
-                      if (typeof s.gst_percent === "number" && s.gst_percent > 0) setGstRate(s.gst_percent);
+                      if (
+                        typeof s.gst_percent === "number" &&
+                        s.gst_percent > 0
+                      )
+                        setGstRate(s.gst_percent);
                       setOpenPartSuggest(false);
                       assessableRef.current?.focus();
                     }}
                   >
                     <div className="font-medium">{s.part_no || "-"}</div>
-                    <div className="text-xs text-slate-500 truncate">{s.description}</div>
+                    <div className="truncate text-xs text-slate-500">
+                      {s.description}
+                    </div>
                   </button>
                 ))}
               </div>
@@ -464,13 +541,17 @@ export function PurchaseForm({ onCreated, onUpdated, initial }: { onCreated?: ()
 
           {/* GST % */}
           <div className="col-span-1">
-            <label className="block text-xs font-medium text-slate-600 dark:text-slate-300 mb-1">GST%</label>
-            <input 
-              type="number" 
-              className="w-full px-2 py-1.5 text-sm border border-slate-300 dark:border-slate-600 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-slate-800" 
+            <label className="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-300">
+              GST%
+            </label>
+            <input
+              type="number"
+              className="w-full rounded border border-slate-300 px-2 py-1.5 text-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500 dark:border-slate-600 dark:bg-slate-800"
               value={gstRate}
-              onChange={(e) => setGstRate(e.target.value === "" ? "" : Number(e.target.value))} 
-              min={0} 
+              onChange={(e) =>
+                setGstRate(e.target.value === "" ? "" : Number(e.target.value))
+              }
+              min={0}
               step={1}
               tabIndex={6}
             />
@@ -478,16 +559,22 @@ export function PurchaseForm({ onCreated, onUpdated, initial }: { onCreated?: ()
 
           {/* Assessable Value */}
           <div className="col-span-2">
-            <label className="block text-xs font-medium text-slate-600 dark:text-slate-300 mb-1">Amount *</label>
-            <input 
+            <label className="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-300">
+              Amount *
+            </label>
+            <input
               ref={assessableRef}
-              type="number" 
-              className="w-full px-2 py-1.5 text-sm border border-slate-300 dark:border-slate-600 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-slate-800" 
+              type="number"
+              className="w-full rounded border border-slate-300 px-2 py-1.5 text-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500 dark:border-slate-600 dark:bg-slate-800"
               value={assessable}
-              onChange={(e) => setAssessable(e.target.value === "" ? "" : Number(e.target.value))} 
-              min={0} 
+              onChange={(e) =>
+                setAssessable(
+                  e.target.value === "" ? "" : Number(e.target.value),
+                )
+              }
+              min={0}
               step={0.01}
-              onKeyDown={(e) => e.key === 'Enter' && submitRef.current?.focus()}
+              onKeyDown={(e) => e.key === "Enter" && submitRef.current?.focus()}
               tabIndex={7}
               required
             />
@@ -495,12 +582,18 @@ export function PurchaseForm({ onCreated, onUpdated, initial }: { onCreated?: ()
 
           {/* Difference */}
           <div className="col-span-1">
-            <label className="block text-xs font-medium text-slate-600 dark:text-slate-300 mb-1">Diff</label>
-            <input 
-              type="number" 
-              className="w-full px-2 py-1.5 text-sm border border-slate-300 dark:border-slate-600 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-slate-800" 
+            <label className="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-300">
+              Diff
+            </label>
+            <input
+              type="number"
+              className="w-full rounded border border-slate-300 px-2 py-1.5 text-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500 dark:border-slate-600 dark:bg-slate-800"
               value={difference}
-              onChange={(e) => setDifference(e.target.value === "" ? "" : Number(e.target.value))} 
+              onChange={(e) =>
+                setDifference(
+                  e.target.value === "" ? "" : Number(e.target.value),
+                )
+              }
               step={0.01}
               tabIndex={8}
             />
@@ -508,10 +601,10 @@ export function PurchaseForm({ onCreated, onUpdated, initial }: { onCreated?: ()
 
           {/* Submit Button */}
           <div className="col-span-3">
-            <button 
+            <button
               ref={submitRef}
-              type="submit" 
-              className="w-full px-4 py-1.5 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed" 
+              type="submit"
+              className="w-full rounded bg-blue-600 px-4 py-1.5 font-medium text-white transition-colors hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
               disabled={addMutation.isPending || !supplierId || !part}
               tabIndex={9}
             >
@@ -521,7 +614,7 @@ export function PurchaseForm({ onCreated, onUpdated, initial }: { onCreated?: ()
         </div>
 
         {/* Compact Summary Row */}
-        <div className="grid grid-cols-8 gap-2 text-xs bg-slate-100 dark:bg-slate-800 p-2 rounded">
+        <div className="grid grid-cols-8 gap-2 rounded bg-slate-100 p-2 text-xs dark:bg-slate-800">
           <div className="flex justify-between">
             <span className="text-slate-600 dark:text-slate-400">CGST:</span>
             <span className="font-mono">{cgst.toFixed(2)}</span>
@@ -543,14 +636,15 @@ export function PurchaseForm({ onCreated, onUpdated, initial }: { onCreated?: ()
             <span className="font-mono">{invoiceValue.toFixed(2)}</span>
           </div>
           <div className="col-span-3 text-right">
-            <div className="text-slate-500 truncate">
-              {selectedSupplier?.name} | {part?.description || "No part selected"}
+            <div className="truncate text-slate-500">
+              {selectedSupplier?.name} |{" "}
+              {part?.description || "No part selected"}
             </div>
           </div>
         </div>
 
         {/* Auto Narration Preview */}
-        <div className="text-xs text-slate-500 bg-slate-50 dark:bg-slate-800 p-2 rounded border-l-2 border-blue-200 dark:border-blue-700">
+        <div className="rounded border-l-2 border-blue-200 bg-slate-50 p-2 text-xs text-slate-500 dark:border-blue-700 dark:bg-slate-800">
           <strong>Auto Narration:</strong> {autoNarration()}
         </div>
       </form>

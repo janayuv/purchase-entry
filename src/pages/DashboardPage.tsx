@@ -12,7 +12,7 @@ export function DashboardPage() {
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {cards.map((c) => (
           <div key={c.title} className="rounded border p-4">
-            <div className="text-sm text-muted-foreground">{c.title}</div>
+            <div className="text-muted-foreground text-sm">{c.title}</div>
             <div className="mt-2 text-2xl font-semibold">{c.value}</div>
           </div>
         ))}

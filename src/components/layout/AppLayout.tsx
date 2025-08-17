@@ -4,11 +4,11 @@ import { ThemeToggle } from "../theme/ThemeToggle";
 
 export function AppLayout() {
   return (
-    <div className="min-h-svh flex">
+    <div className="flex min-h-svh">
       <Sidebar />
-      <div className="flex-1 flex flex-col">
-        <header className="border-b bg-background/60 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-          <div className="px-4 py-2 flex items-center justify-end">
+      <div className="flex flex-1 flex-col">
+        <header className="bg-background/60 supports-[backdrop-filter]:bg-background/60 border-b backdrop-blur">
+          <div className="flex items-center justify-end px-4 py-2">
             <ThemeToggle />
           </div>
         </header>

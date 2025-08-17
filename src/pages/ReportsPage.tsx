@@ -1,7 +1,11 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DateRangePicker } from "@/components/ui/DateRangePicker";
-import type { PurchaseEntry, PurchasesBySupplier, ReportSummary } from "@/lib/types";
+import type {
+  PurchaseEntry,
+  PurchasesBySupplier,
+  ReportSummary,
+} from "@/lib/types";
 import { invoke } from "@tauri-apps/api/core";
 import { save } from "@tauri-apps/plugin-dialog";
 import { writeTextFile } from "@tauri-apps/plugin-fs";
@@ -72,7 +76,7 @@ export function ReportsPage() {
             p.tds_value,
             p.narration,
             p.status,
-          ].join(",")
+          ].join(","),
         ),
       ].join("\n");
 
@@ -89,7 +93,7 @@ export function ReportsPage() {
 
   return (
     <div className="space-y-4">
-      <div className="flex justify-between items-center">
+      <div className="flex items-center justify-between">
         <h2 className="text-xl font-semibold">Reports</h2>
         <div className="flex items-center gap-2">
           <DateRangePicker value={dateRange} onChange={setDateRange} />

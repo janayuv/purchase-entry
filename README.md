@@ -49,6 +49,7 @@ This template includes a multi-OS CI that runs linting, formatting, typecheck, t
 - Releases: pushing tags like `v1.0.0` creates a draft GitHub Release with installer artifacts.
 
 ### Configure signing (optional but recommended)
+
 Set these GitHub repository secrets if you want signed builds:
 
 - `APPLE_ID`: Apple ID email used for notarization
