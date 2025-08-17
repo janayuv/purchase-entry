@@ -1,13 +1,15 @@
 import { create } from "zustand";
+import type { User } from "@/lib/types";
 
 // Simple global store example
 // Extend this interface with your app's state
 interface AppState {
   theme: "light" | "dark";
   setTheme: (t: "light" | "dark") => void;
-  counter: number;
-  inc: () => void;
-  reset: () => void;
+  user: User | null;
+  token: string | null;
+  login: (user: User, token: string) => void;
+  logout: () => void;
 }
 
 type Setter = (
@@ -17,7 +19,8 @@ type Setter = (
 export const useAppStore = create<AppState>((set: Setter) => ({
   theme: "light",
   setTheme: (t: "light" | "dark") => set({ theme: t }),
-  counter: 0,
-  inc: () => set((s: AppState) => ({ counter: s.counter + 1 })),
-  reset: () => set({ counter: 0 }),
+  user: null,
+  token: null,
+  login: (user, token) => set({ user, token }),
+  logout: () => set({ user: null, token: null }),
 }));
